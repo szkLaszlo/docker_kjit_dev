@@ -4,12 +4,10 @@ LABEL maintainer="szoke.laszlo95@edu.bme.hu"
 LABEL docker_image_name="SUMO environment with Pytorch"
 LABEL description="This container is created to use SUMO with Pytorch or TensorFlow and Keras"
 
-# Gnome-terminal and locales
-ENV LANG=en_US.UTF-8
-
 # Install make and compilers and extra stuff
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
     apt-get install --no-install-recommends -qy \
+    openssh-client openssh-server \
     python3.8 \
     python3-pip && \
     apt-get clean -qq && \
