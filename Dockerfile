@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
-ENV PATH="/root/miniconda3/bin:${PATH}"
-ARG PATH="/root/miniconda3/bin:${PATH}"
+ENV PATH="/opt/miniconda3/bin:${PATH}"
+ARG PATH="/opt/miniconda3/bin:${PATH}"
 
 LABEL maintainer="szoke.laszlo95@edu.bme.hu"
 LABEL docker_image_name="SUMO environment with Pytorch"
@@ -21,7 +21,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
 
 RUN wget \
     https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
-    && mkdir /root/.conda \
+    && mkdir /opt/conda \
     && bash Miniconda3-latest-Linux-x86_64.sh -b \
     && rm -f Miniconda3-latest-Linux-x86_64.sh 
     
@@ -40,10 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV SUMO_HOME /usr/share/sumo
 
 RUN conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
-RUN pip3 install gym easygui
-
-WORKDIR /workspace
-RUN chmod -R 777 /workspace
+RUN conda install -c conda-forge gym easygui
 
 RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/sumo/tools/" >> /etc/environment
 
