@@ -34,7 +34,8 @@ RUN conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
 
 RUN conda install -c anaconda tensorflow-gpu
 
-RUN conda install -c conda-forge gym easygui matplotlib
+RUN conda install -c conda-forge gym easygui matplotlib 
+RUN conda install -c conda-forge control
 
 COPY entry.sh /entry.sh
 RUN chmod +x /entry.sh
