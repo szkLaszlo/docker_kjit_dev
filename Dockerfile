@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	
 ENV SUMO_HOME /usr/share/sumo
 
-RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/sumo/tools/" >> /etc/environment
+RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
 
 RUN conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
 

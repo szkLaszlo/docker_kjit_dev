@@ -3,7 +3,7 @@ services:
   trainer:
     image: kjit-dev
     volumes:
-     - ./../../../:/workspace
+     - ./../:/workspace
      - /mnt:/mnt
      - /home:/home
      - /cache:/cache
