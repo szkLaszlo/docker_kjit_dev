@@ -1,7 +1,7 @@
 version: '3'
 services:
   trainer:
-    image: kjit-dev
+    image: szokelaszlo95/kjit-dev
     volumes:
      - ./../:/workspace
      - /mnt:/mnt
