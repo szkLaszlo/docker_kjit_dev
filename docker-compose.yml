@@ -1,7 +1,7 @@
 version: '3'
 services:
   trainer:
-    image: szokelaszlo95/kjit-dev
+    image: kjit-dev
     volumes:
      - ./../:/workspace
      - /mnt:/mnt
@@ -9,6 +9,7 @@ services:
      - /cache:/cache
      - /media:/media
      - /:/mnt/host
+     - $HOME/.Xauthority:/root/.Xauthority:rw
      - /tmp/.X11-unix:/tmp/.X11-unix
      - /etc/sudoers:/etc/sudoers:ro                          # inherit sudoers settings from hosts
      - /etc/passwd:/etc/passwd:ro

@@ -14,4 +14,4 @@ if [ "$START_SSH" = true ]; then
     service ssh start
 fi
 
-exec su $HOST_USER "$@"
+su $HOST_USER "$@"
