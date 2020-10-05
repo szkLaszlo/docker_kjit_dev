@@ -1,7 +1,7 @@
-FROM pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel
+FROM  pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel AS python_img
 
 LABEL maintainer="szoke.laszlo95@edu.bme.hu"
-LABEL docker_image_name="SUMO environment with Pytorch"
+LABEL docker_image_name="Pytorch remote development"
 LABEL description="This container is created to use SUMO with Pytorch or TensorFlow and Keras"
 
 # System settings
@@ -19,18 +19,15 @@ RUN echo 'LANG=en_US.UTF-8' > '/etc/default/locale' && \
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -qy \
     build-essential autoconf automake \
-    sudo vim nano git curl wget \
+    sudo vim nano git curl wget tmux \
     libglvnd0 \
     libgl1 \
     libglx0 \
     libegl1 \
     libxext6 \
     libx11-6 \
-    python-numpy python-scipy python-opencv \
-    python python-dev python-setuptools python-pip \
-    python3 python3-dev python3-setuptools python3-pip \
     gcc git openssh-client libfontconfig1 \
-    vim emacs python tcpdump telnet byacc flex \
+    emacs python tcpdump telnet byacc flex \
     iproute2 gdbserver less bison valgrind \
     libxtst-dev libxext-dev libxrender-dev libfreetype6-dev \
     openssh-server cmake gdb build-essential clang llvm lldb && \
@@ -50,11 +47,25 @@ RUN curl -fsSL -o pycharm-professional.tar.gz "https://data.services.jetbrains.c
 
 RUN python /opt/pycharm/plugins/python/helpers/pydev/setup_cython.py build_ext --inplace
 
-WORKDIR /workspace
-RUN chmod -R 777 /workspace
-
 # Add executables
 RUN echo "/opt/pycharm/bin/pycharm.sh &" > /usr/bin/pycharm && chmod +x /usr/bin/pycharm
+
+RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /etc/environment
+
+RUN conda update -n base -c defaults conda
+RUN conda install tensorflow-gpu==2.1.0
+RUN conda install tensorflow-estimator==2.1.0
+RUN conda install -c conda-forge gym easygui matplotlib opencv control 
+
+COPY entry.sh /entry.sh
+RUN chmod +x /entry.sh
+ENTRYPOINT /entry.sh
+
+FROM python_img AS sumo_img
+LABEL maintainer="szoke.laszlo95@edu.bme.hu"
+LABEL docker_image_name="SUMO environment with Pytorch"
+LABEL description="This container is created to use SUMO with Pytorch or TensorFlow and Keras"
+
 RUN apt-get update && \
 	apt-get install -y software-properties-common && \
 	rm -rf /var/lib/apt/lists/*
@@ -67,16 +78,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	sumo-doc
 	
 ENV SUMO_HOME /usr/share/sumo
-
 RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
 
-RUN conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
+FROM python_img AS carla_img
 
-RUN conda install -c anaconda tensorflow-gpu
+LABEL maintainer="szoke.laszlo95@edu.bme.hu"
+LABEL docker_image_name="Carla with Python/Pytorch/Tensorflow"
+LABEL description="This container is created for Carla with Pytorch or TensorFlow and Keras"
 
-RUN conda install -c conda-forge gym easygui matplotlib 
-RUN conda install -c conda-forge control
+WORKDIR /opt/carla
+RUN chmod -R 777 .
+COPY --from=carlasim/carla:latest /home/carla/ .
 
-COPY entry.sh /entry.sh
-RUN chmod +x /entry.sh
-ENTRYPOINT /entry.sh
+
+

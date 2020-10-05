@@ -1,7 +1,7 @@
 version: '3'
 services:
-  trainer:
-    image: szokelaszlo95/kjit-dev
+  base:
+    image: szokelaszlo95/kjit-base
     volumes:
      - ./../:/workspace
      - /mnt:/mnt
@@ -27,9 +27,83 @@ services:
       - "1234:22"
     ipc: host
 
-    container_name: aitrainer
-    hostname: aitrainer-dev
+    container_name: sumo
+    hostname: sumo-dev
     working_dir: $HOME
+
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+
+  sumo:
+    image: szokelaszlo95/sumo-dev
+    volumes:
+     - ./../:/workspace
+     - /mnt:/mnt
+     - /home:/home
+     - /cache:/cache
+     - /media:/media
+     - /:/mnt/host
+     - $HOME/.Xauthority:/root/.Xauthority:rw
+     - /tmp/.X11-unix:/tmp/.X11-unix
+     - /etc/sudoers:/etc/sudoers:ro                          # inherit sudoers settings from hosts
+     - /etc/passwd:/etc/passwd:ro
+     - /etc/shadow:/etc/shadow:ro
+    environment:
+    - DISPLAY=${DISPLAY}
+    - QT_X11_NO_MITSHM=1
+    - HOST_USER=$USER
+    - HOST_UID=$UID
+    - _JAVA_OPTIONS=-Duser.home=/home/$USER/    # for Java based apps, i.e. PyCharm, CLion
+    - NVIDIA_VISIBLE_DEVICES=all
+    entrypoint: ["/entry.sh","true"]
+
+    ports:
+      - "1234:22"
+    ipc: host
+
+    container_name: sumo
+    hostname: sumo-dev
+    working_dir: $HOME
+
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+      
+  carla:
+    image: szokelaszlo95/carla-dev
+    volumes:
+     - ./../:/workspace
+     - /mnt:/mnt
+     - /home:/home
+     - /cache:/cache
+     - /media:/media
+     - /:/mnt/host
+     - $HOME/.Xauthority:/root/.Xauthority:rw
+     - /tmp/.X11-unix:/tmp/.X11-unix
+     - /etc/sudoers:/etc/sudoers:ro                          # inherit sudoers settings from hosts
+     - /etc/passwd:/etc/passwd:ro
+     - /etc/shadow:/etc/shadow:ro
+    environment:
+     - DISPLAY=${DISPLAY}
+     - QT_X11_NO_MITSHM=1
+     - HOST_USER=$USER
+     - HOST_UID=$UID
+     - _JAVA_OPTIONS=-Duser.home=/home/$USER/    # for Java based apps, i.e. PyCharm, CLion
+     - NVIDIA_VISIBLE_DEVICES=all
+    entrypoint: ["/entry.sh","true"] #["./CarlaUE4.sh", "-opengl"]
+
+    ports:
+      - "1234:22"
+      - "2002:2002"
+      - "2000:2000"
+    ipc: host
+
+    container_name: carlasim
+    hostname: carlasim
+    working_dir: /home/$USER
 
     cap_add:
       - SYS_PTRACE
