@@ -1,7 +1,7 @@
 version: '3'
 services:
   base:
-    image: szokelaszlo95/kjit-base
+    image: kjit-base
     volumes:
      - ./../:/workspace
      - /mnt:/mnt
@@ -37,7 +37,7 @@ services:
       - seccomp:unconfined
 
   sumo:
-    image: szokelaszlo95/sumo-dev
+    image: sumo-dev
     volumes:
      - ./../:/workspace
      - /mnt:/mnt
@@ -73,7 +73,7 @@ services:
       - seccomp:unconfined
       
   carla:
-    image: szokelaszlo95/carla-dev
+    image: carla-dev
     volumes:
      - ./../:/workspace
      - /mnt:/mnt
