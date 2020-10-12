@@ -4,7 +4,6 @@ services:
     image: szokelaszlo95/kjit-base
     volumes:
      - ./../:/workspace
-     - /mnt:/mnt
      - /home:/home
      - /cache:/cache
      - /media:/media
@@ -27,8 +26,8 @@ services:
       - "1234:22"
     ipc: host
 
-    container_name: sumo
-    hostname: sumo-dev
+    container_name: kjit-base
+    hostname: kjit-base
     working_dir: $HOME
 
     cap_add:
@@ -40,7 +39,6 @@ services:
     image: szokelaszlo95/sumo-dev
     volumes:
      - ./../:/workspace
-     - /mnt:/mnt
      - /home:/home
      - /cache:/cache
      - /media:/media
@@ -76,7 +74,6 @@ services:
     image: szokelaszlo95/carla-dev
     volumes:
      - ./../:/workspace
-     - /mnt:/mnt
      - /home:/home
      - /cache:/cache
      - /media:/media
@@ -96,7 +93,7 @@ services:
     entrypoint: ["/entry.sh","true"] #["./CarlaUE4.sh", "-opengl"]
 
     ports:
-      - "1234:22"
+      - "12345:22"
       - "2002:2002"
       - "2000:2000"
     ipc: host
