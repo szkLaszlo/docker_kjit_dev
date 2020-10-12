@@ -88,7 +88,9 @@ LABEL description="This container is created for Carla with Pytorch or TensorFlo
 
 WORKDIR /opt/carla
 RUN chmod -R 777 .
-COPY --from=carlasim/carla:latest /home/carla/ .
+COPY --from=carlasim/carla:0.9.10 /home/carla/ .
 
+RUN conda install pandas
+RUN conda install -c conda-forge opencv
 
 
