@@ -93,7 +93,7 @@ services:
     entrypoint: ["/entry.sh","true"] #["./CarlaUE4.sh", "-opengl"]
 
     ports:
-      - "12345:22"
+      - "1234:22"
       - "2002:2002"
       - "2000:2000"
     ipc: host
