@@ -35,7 +35,7 @@ services:
     security_opt:
       - seccomp:unconfined
 
-  sumo:
+  sumo-dev:
     image: szokelaszlo95/sumo-dev
     volumes:
      - ./../:/workspace
@@ -51,8 +51,8 @@ services:
     environment:
     - DISPLAY=${DISPLAY}
     - QT_X11_NO_MITSHM=1
-    - HOST_USER=$USER
-    - HOST_UID=$UID
+    - USER=$USER
+    - UID=$UID
     - _JAVA_OPTIONS=-Duser.home=/home/$USER/    # for Java based apps, i.e. PyCharm, CLion
     - NVIDIA_VISIBLE_DEVICES=all
     entrypoint: ["/entry.sh","true"]
@@ -70,7 +70,7 @@ services:
     security_opt:
       - seccomp:unconfined
       
-  carla:
+  carla-dev:
     image: szokelaszlo95/carla-dev
     volumes:
      - ./../:/workspace
