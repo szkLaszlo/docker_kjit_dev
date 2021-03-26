@@ -1,6 +1,23 @@
-FROM  pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel AS python_img
+ARG LOC
+# Options: company, bme
+ARG MID_IMAGE
 
-LABEL maintainer="szoke.laszlo95@edu.bme.hu"
+
+FROM pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel AS company_version
+ENV http_proxy=http://172.17.0.1:3128
+ENV https_proxy=http://172.17.0.1:3128
+ENV NO_PROXY=*.bosch.com,127.0.0.1
+
+RUN echo 'Acquire::http::proxy "http://172.17.0.1:3128/";'  >> /etc/apt/apt.conf.d/05proxy && \
+    echo 'Acquire::https::proxy "http://172.17.0.1:3128/";'  >> /etc/apt/apt.conf.d/05proxy && \
+    echo 'Acquire::ftp::proxy "http://172.17.0.1:3128/";' >> /etc/apt/apt.conf.d/05proxy
+
+FROM pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel AS bme_version
+RUN echo "No proxy setup necessary."
+
+FROM ${LOC}_version AS python_img
+
+LABEL maintainer="szoke.laszlo@kjk.bme.hu"
 LABEL docker_image_name="Pytorch remote development"
 LABEL description="This container is created to use SUMO with Pytorch or TensorFlow and Keras"
 
@@ -15,6 +32,7 @@ RUN echo 'LANG=en_US.UTF-8' > '/etc/default/locale' && \
     locale-gen --lang en_US.UTF-8 && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=$LANG
+
 # Install make and compilers and extra stuff
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -qy \
@@ -35,6 +53,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /tmp/*
     
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive apt install -qqy krb5-user krb5-locales libpam-krb5
+
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
 
@@ -53,16 +74,15 @@ RUN echo "/opt/pycharm/bin/pycharm.sh &" > /usr/bin/pycharm && chmod +x /usr/bin
 RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /etc/environment
 
 RUN conda update -n base -c defaults conda
+RUN conda install pandas
 RUN conda install tensorflow-gpu==2.1.0
 RUN conda install tensorflow-estimator==2.1.0
-RUN conda install -c conda-forge gym easygui matplotlib opencv control 
 
 COPY entry.sh /entry.sh
 RUN chmod +x /entry.sh
 ENTRYPOINT /entry.sh
 
-FROM python_img AS sumo_img
-LABEL maintainer="szoke.laszlo95@edu.bme.hu"
+FROM python_img AS img_sumo
 LABEL docker_image_name="SUMO environment with Pytorch"
 LABEL description="This container is created to use SUMO with Pytorch or TensorFlow and Keras"
 
@@ -71,18 +91,18 @@ RUN apt-get update && \
 	rm -rf /var/lib/apt/lists/*
 
 # Installing SUMO
-RUN add-apt-repository ppa:sumo/stable 
+RUN add-apt-repository ppa:sumo/stable
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	sumo \
 	sumo-tools \
 	sumo-doc
-	
+
 ENV SUMO_HOME /usr/share/sumo
 RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
+RUN pip install gym easygui matplotlib opencv-python control
 
-FROM python_img AS carla_img
+FROM python_img AS img_carla
 
-LABEL maintainer="szoke.laszlo95@edu.bme.hu"
 LABEL docker_image_name="Carla with Python/Pytorch/Tensorflow"
 LABEL description="This container is created for Carla with Pytorch or TensorFlow and Keras"
 
@@ -90,7 +110,8 @@ WORKDIR /opt/carla
 RUN chmod -R 777 .
 COPY --from=carlasim/carla:0.9.10 /home/carla/ .
 
-RUN conda install pandas
-RUN conda install -c conda-forge opencv
+FROM img_${MID_IMAGE} as final_image
 
-
+RUN pip install gym[atari]
+RUN pip install pytorch-lightning-bolts
+RUN pip install pytorch-lightning-bolts["extra"]
