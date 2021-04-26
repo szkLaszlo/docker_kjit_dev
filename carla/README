@@ -11,17 +11,15 @@
 	sudo systemctl restart sshd
 
 # The server and the client has to be started on the same machine:
-# Start the carla server, by running the following command in folder /docker/carla
+# Start the carla server, by running the following command
 docker-compose run --service-ports carla_server
 
 # Start the client with remote display with the following command in a MobaXterm session (it is responsible for X forwarding)
 ./start_remote_client.sh
 
 #Test:
-cd /workspace/carla/PythonAPI/examples  # pull the repository if necessary ssh://git@sourcecode.socialcoding.bosch.com:7999/bpai/carla.git
+cd /workspace/carla/PythonAPI/examples  # pull the repository if necessary
 python manual_control.py --host 172.17.0.1 --res 400x200 # Change the IP if necessary, look at the explanation below
 
 
 # Inside the container the server can be reached with ip 172.17.0.1
-# (this is the default ip of the docker host machine, you can check it with "ifconfig" by looking at the IP of the "docker" interface)
-# In the future this might be changed by using bridge between the dockers
