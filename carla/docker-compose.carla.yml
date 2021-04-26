@@ -20,7 +20,7 @@ services:
     volumes:
 #    - $XAUTH:$XAUTH
     - /home:/home
-    - /home/zlo2bp/remote_deployment/:/workspace
+    - ~/workspace:/workspace
     - /mnt:/mnt
     - /cache:/cache
     ports:
