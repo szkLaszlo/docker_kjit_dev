@@ -1,0 +1,37 @@
+version: '3'
+services:
+#     ______       _       _______     _____          _       
+#   .' ___  |     / \     |_   __ \   |_   _|        / \      
+#  / .'   \_|    / _ \      | |__) |    | |         / _ \     
+#  | |          / ___ \     |  __ /     | |   _    / ___ \    
+#  \ `.___.'\ _/ /   \ \_  _| |  \ \_  _| |__/ | _/ /   \ \_  
+#   `.____ .'|____| |____||____| |___||________||____| |____| 
+#                                                                                                                                                                                            
+
+  carla_client:
+    image: carla-dev
+    environment:
+    - SDL_VIDEODRIVER=x11
+    - DISPLAY=$DISPLAY
+    - XAUTHORITY=$XAUTH
+    - XAUTH=$XAUTH
+    - HOST_USER=$USER
+    - HOST_UID=$UID
+    volumes:
+#    - $XAUTH:$XAUTH
+    - /home:/home
+    - /home/zlo2bp/remote_deployment/:/workspace
+    - /mnt:/mnt
+    - /cache:/cache
+    ports:
+    - 2000-2002:2000-2002
+    entrypoint: /entry.sh
+
+
+  carla_server:
+    image: carla_server
+    volumes:
+    - /cache:/cache
+    - /mnt:/mnt
+    ports:
+    - 2000-2002:2000-2002

@@ -1,9 +1,18 @@
-ARG LOC
 # Options: company, bme
-ARG MID_IMAGE
+ARG LOC
 
+ARG BASE_IMG=pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel
+# Defining the building bases for the different versions
+ARG CARLA_BASE=python
+ARG ROS_BASE=carla
+# Adding the final layers e.g. extra packages
+ARG TEMP_IMAGE=sumo
 
-FROM pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel AS company_version
+# in case of carla, use these
+ARG CARLA_VERSION=0.9.11
+ARG MAP_FILE=https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_$CARLA_VERSION.tar.gz
+
+FROM ${BASE_IMG} AS company_version
 ENV http_proxy=http://172.17.0.1:3128
 ENV https_proxy=http://172.17.0.1:3128
 ENV NO_PROXY=*.bosch.com,127.0.0.1
@@ -12,7 +21,7 @@ RUN echo 'Acquire::http::proxy "http://172.17.0.1:3128/";'  >> /etc/apt/apt.conf
     echo 'Acquire::https::proxy "http://172.17.0.1:3128/";'  >> /etc/apt/apt.conf.d/05proxy && \
     echo 'Acquire::ftp::proxy "http://172.17.0.1:3128/";' >> /etc/apt/apt.conf.d/05proxy
 
-FROM pytorch/pytorch:1.6.0-cuda10.1-cudnn7-devel AS bme_version
+FROM ${BASE_IMG} AS bme_version
 RUN echo "No proxy setup necessary."
 
 FROM ${LOC}_version AS python_img
@@ -72,6 +81,7 @@ RUN python /opt/pycharm/plugins/python/helpers/pydev/setup_cython.py build_ext -
 RUN echo "/opt/pycharm/bin/pycharm.sh &" > /usr/bin/pycharm && chmod +x /usr/bin/pycharm
 
 RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /etc/environment
+RUN echo "PYTHONPATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /etc/environment
 
 RUN conda update -n base -c defaults conda
 RUN conda install pandas
@@ -82,7 +92,7 @@ COPY entry.sh /entry.sh
 RUN chmod +x /entry.sh
 ENTRYPOINT /entry.sh
 
-FROM python_img AS img_sumo
+FROM python_img AS sumo_img
 LABEL docker_image_name="SUMO environment with Pytorch"
 LABEL description="This container is created to use SUMO with Pytorch or TensorFlow and Keras"
 
@@ -98,20 +108,63 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	sumo-doc
 
 ENV SUMO_HOME /usr/share/sumo
-RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
+RUN echo "PATH=$PATH:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
+RUN echo "PYTHONPATH=$PTHONPATH:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
 RUN pip install gym easygui matplotlib opencv-python control
 
-FROM python_img AS img_carla
+FROM mwendler/wget as temp_carla
+#ENV http_proxy=http://172.17.0.1:3128
+#ENV https_proxy=http://172.17.0.1:3128
+ARG MAP_FILE
+RUN wget -S --no-check-certificate $MAP_FILE
 
-LABEL docker_image_name="Carla with Python/Pytorch/Tensorflow"
-LABEL description="This container is created for Carla with Pytorch or TensorFlow and Keras"
+FROM carlasim/carla:$CARLA_VERSION  as carla_server
+ARG CARLA_VERSION
+WORKDIR /home/carla
+COPY --from=temp_carla /AdditionalMaps_$CARLA_VERSION.tar.gz Import/
+RUN echo "copy done"
+RUN ./ImportAssets.sh
 
-WORKDIR /opt/carla
-RUN chmod -R 777 .
-COPY --from=carlasim/carla:0.9.10 /home/carla/ .
+FROM ${CARLA_BASE}_img as carla_img
+ARG CARLA_VERSION
 
-FROM img_${MID_IMAGE} as final_image
+COPY --from=carla_server /home/carla/PythonAPI/carla/dist/carla-$CARLA_VERSION-py3.7-linux-x86_64.egg /carla_packages/
+ENV PYTHONPATH="$PYTHONPATH:/carla_packages/carla-$CARLA_VERSION-py3.7-linux-x86_64.egg"
+
+RUN pip install pygame
+
+##### ROSSSSS
+FROM ${ROS_BASE}_img as ros_img
+
+RUN DEBIAN_FRONTEND=noninteractive apt update && \
+    DEBIAN_FRONTEND=noninteractive apt install --no-install-recommends -y \
+    python3-ros* python-message-filters python-rospy python-rosbag python-rosnode python-geometry-msgs \
+    python-catkin-pkg python-sensor-msgs python-visualization-msgs && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/*
+
+RUN cp -r /usr/lib/python2.7/dist-packages/visualization_msgs/ /opt/conda/lib/python3.7/site-packages/ && \
+    cp -r /usr/lib/python2.7/dist-packages/sensor_msgs/ /opt/conda/lib/python3.7/site-packages/ && \
+    cp -r /usr/lib/python2.7/dist-packages/std_msgs/ /opt/conda/lib/python3.7/site-packages/ && \
+    cp -r /usr/lib/python2.7/dist-packages/geometry_msgs /opt/conda/lib/python3.7/site-packages/ && \
+    cp -r /usr/lib/python2.7/dist-packages/genpy /opt/conda/lib/python3.7/site-packages/ && \
+    cp -r /usr/lib/python2.7/dist-packages/message_filters /opt/conda/lib/python3.7/site-packages/  && \
+    cp -r /usr/lib/python2.7/dist-packages/genmsg /opt/conda/lib/python3.7/site-packages/ && \
+    cp -r /usr/lib/python2.7/dist-packages/ros* /opt/conda/lib/python3.7/site-packages/ && \
+    cp -r /usr/lib/python2.7/dist-packages/catkin /opt/conda/lib/python3.7/site-packages/ && \
+    rm -rf /opt/conda/lib/python3.7/site-packages/message_filters/__init__.py
+
+COPY ros/ros_message_filter/__init__.py /opt/conda/lib/python3.7/site-packages/message_filters/
+
+RUN pip install pydot catkin_pkg rospkg utm
+
+WORKDIR /workspace
+ENV PYTHONPATH=$PYTHONPATH:/workspace:/opt/ros/kinetic/lib/python2.7/dist-packages
+
+FROM ${TEMP_IMAGE}_img as final_image
 
 RUN pip install gym[atari]
 RUN pip install pytorch-lightning-bolts
 RUN pip install pytorch-lightning-bolts["extra"]
+
