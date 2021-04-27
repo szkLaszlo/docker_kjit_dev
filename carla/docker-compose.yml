@@ -9,7 +9,7 @@ services:
 #                                                                                                                                                                                            
 
   carla_client:
-    image: carla-dev
+    image: szokelaszlo95/carla-dev
     environment:
     - SDL_VIDEODRIVER=x11
     - DISPLAY=$DISPLAY
@@ -43,7 +43,7 @@ services:
     entrypoint: ["/entry.sh", "true"]
 
   carla_server:
-    image: carla_server
+    image: szokelaszlo95/carla-dev:server
     volumes:
 #    - /cache:/cache
     - /tmp/.X11-unix:/tmp/.X11-unix:rw
