@@ -9,7 +9,7 @@ services:
 #                                                                                                                                                                                            
 
   carla_client:
-    image: szokelaszlo95/carla-dev
+    image: carla-dev
     environment:
     - SDL_VIDEODRIVER=x11
     - DISPLAY=$DISPLAY
@@ -20,18 +20,21 @@ services:
     volumes:
 #    - $XAUTH:$XAUTH
     - /home:/home
-    - ~/workspace:/workspace
+    - /home/$USER/workspace:/workspace
     - /mnt:/mnt
     - /cache:/cache
+    - /tmp:/tmp
     ports:
     - 2000-2002:2000-2002
     entrypoint: /entry.sh
 
-
   carla_server:
     image: carla_server
     volumes:
-    - /cache:/cache
-    - /mnt:/mnt
+#    - /cache:/cache
+    - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    - SDL_VIDEODRIVER=offscreen
+    - ~/workspace:/workspace
     ports:
     - 2000-2002:2000-2002
+    entrypoint: ["./CarlaUE4.sh", "-world-port", "2000", "-no-sound", "-opengl"]

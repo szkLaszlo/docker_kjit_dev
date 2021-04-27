@@ -9,7 +9,7 @@ ARG ROS_BASE=carla
 ARG TEMP_IMAGE=sumo
 
 # in case of carla, use these
-ARG CARLA_VERSION=0.9.11
+ARG CARLA_VERSION=0.9.9
 ARG MAP_FILE=https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_$CARLA_VERSION.tar.gz
 
 FROM ${BASE_IMG} AS company_version
@@ -108,6 +108,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	sumo-doc
 
 ENV SUMO_HOME /usr/share/sumo
+ARG PATH
+ARG PYTHONPATH
 RUN echo "PATH=$PATH:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
 RUN echo "PYTHONPATH=$PTHONPATH:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
 RUN pip install gym easygui matplotlib opencv-python control
@@ -120,6 +122,13 @@ RUN wget -S --no-check-certificate $MAP_FILE
 
 FROM carlasim/carla:$CARLA_VERSION  as carla_server
 ARG CARLA_VERSION
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
+#ENV http_proxy=http://172.17.0.1:3128
+#ENV https_proxy=http://172.17.0.1:3128
+USER root
+RUN apt-get update && apt-get install -y xdg-user-dirs xdg-utils && apt-get clean
+USER carla
 WORKDIR /home/carla
 COPY --from=temp_carla /AdditionalMaps_$CARLA_VERSION.tar.gz Import/
 RUN echo "copy done"
@@ -129,6 +138,8 @@ FROM ${CARLA_BASE}_img as carla_img
 ARG CARLA_VERSION
 
 COPY --from=carla_server /home/carla/PythonAPI/carla/dist/carla-$CARLA_VERSION-py3.7-linux-x86_64.egg /carla_packages/
+ARG PYTHONPATH
+RUN echo $PYTHONPATH
 ENV PYTHONPATH="$PYTHONPATH:/carla_packages/carla-$CARLA_VERSION-py3.7-linux-x86_64.egg"
 
 RUN pip install pygame

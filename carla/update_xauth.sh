@@ -1,6 +1,6 @@
 #XAUTH file for remote GUI
-export XAUTH=/tmp/.carla_docker.xauth
-echo $XAUTH
+XAUTH=/tmp/.carla_docker.xauth
+
 DISPLAY=$DISPLAY
 sudo rm -rf $XAUTH
 touch $XAUTH
