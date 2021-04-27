@@ -17,24 +17,38 @@ services:
     - XAUTH=$XAUTH
     - HOST_USER=$USER
     - HOST_UID=$UID
+    - QT_X11_NO_MITSHM=1
+    - _JAVA_OPTIONS=-Duser.home=/home/$USER/    # for Java based apps, i.e. PyCharm, CLion
+    - NVIDIA_VISIBLE_DEVICES=all
     volumes:
 #    - $XAUTH:$XAUTH
     - /home:/home
     - /home/$USER/workspace:/workspace
+    - /tmp/.X11-unix:/tmp/.X11-unix:rw
     - /mnt:/mnt
     - /cache:/cache
     - /tmp:/tmp
     ports:
     - 2000-2002:2000-2002
-    entrypoint: /entry.sh
+    
+    container_name: carla
+    hostname: carla-remote-dev
+    working_dir: $HOME
+
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    
+    entrypoint: ["/entry.sh", "true"]
 
   carla_server:
     image: carla_server
     volumes:
 #    - /cache:/cache
     - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    - SDL_VIDEODRIVER=offscreen
+    - SDL_VIDEODRIVER=x11
     - ~/workspace:/workspace
     ports:
     - 2000-2002:2000-2002
-    entrypoint: ["./CarlaUE4.sh", "-world-port", "2000", "-no-sound", "-opengl"]
+    entrypoint: ["./CarlaUE4.sh", "-no-sound", "-opengl"]

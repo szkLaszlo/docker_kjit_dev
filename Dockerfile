@@ -108,10 +108,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	sumo-doc
 
 ENV SUMO_HOME /usr/share/sumo
-ARG PATH
-ARG PYTHONPATH
 RUN echo "PATH=$PATH:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
-RUN echo "PYTHONPATH=$PTHONPATH:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
+RUN echo "PYTHONPATH=$PYTHONPATH:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
 RUN pip install gym easygui matplotlib opencv-python control
 
 FROM mwendler/wget as temp_carla
@@ -138,9 +136,7 @@ FROM ${CARLA_BASE}_img as carla_img
 ARG CARLA_VERSION
 
 COPY --from=carla_server /home/carla/PythonAPI/carla/dist/carla-$CARLA_VERSION-py3.7-linux-x86_64.egg /carla_packages/
-ARG PYTHONPATH
-RUN echo $PYTHONPATH
-ENV PYTHONPATH="$PYTHONPATH:/carla_packages/carla-$CARLA_VERSION-py3.7-linux-x86_64.egg"
+RUN echo "PYTHONPATH=$PYTHONPATH:/carla_packages/carla-$CARLA_VERSION-py3.7-linux-x86_64.egg" >> /etc/environment
 
 RUN pip install pygame
 
