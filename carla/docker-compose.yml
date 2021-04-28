@@ -26,7 +26,7 @@ services:
     - /home/$USER/workspace:/workspace
     - /tmp/.X11-unix:/tmp/.X11-unix:rw
     - /mnt:/mnt
-    - /cache:/cache
+    - /cache/hdd:/cache
     - /tmp:/tmp
     ports:
     - 2000-2002:2000-2002
