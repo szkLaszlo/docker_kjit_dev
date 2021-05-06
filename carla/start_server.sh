@@ -1,2 +1,3 @@
 xhost +
-docker-compose run --service-ports carla_server
+docker-compose run carla_server
+xhost -

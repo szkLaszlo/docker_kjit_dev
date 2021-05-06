@@ -21,34 +21,35 @@ services:
     - _JAVA_OPTIONS=-Duser.home=/home/$USER/    # for Java based apps, i.e. PyCharm, CLion
     - NVIDIA_VISIBLE_DEVICES=all
     volumes:
-#    - $XAUTH:$XAUTH
-    - /home:/home
-    - /home/$USER/workspace:/workspace
+    - /home/$USER/:/home/$USER
     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    - /etc/krb5.conf:/etc/krb5.conf:ro                      # Mount Kerberos ticket for authentication
+    - /etc/krb5.conf.d/:/etc/krb5.conf.d/:ro                # Mount Kerberos ticket for authentication?
     - /mnt:/mnt
     - /cache/hdd:/cache
     - /tmp:/tmp
     ports:
-    - 2000-2002:2000-2002
-    
+    - "1234:22"
+    links:
+      - "carla_server:server"
+
     container_name: carla
     hostname: carla-remote-dev
     working_dir: $HOME
-
     cap_add:
       - SYS_PTRACE
     security_opt:
       - seccomp:unconfined
-    
     entrypoint: ["/entry.sh", "true"]
 
   carla_server:
-    image: szokelaszlo95/carla-dev:server
+    image: szokelaszlo95/carla_server
+    environment:
+      - SDL_VIDEODRIVER=offscreen
     volumes:
-#    - /cache:/cache
     - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    - SDL_VIDEODRIVER=x11
     - ~/workspace:/workspace
     ports:
     - 2000-2002:2000-2002
-    entrypoint: ["./CarlaUE4.sh", "-no-sound", "-opengl"]
+
+    entrypoint: ["/bin/bash", "./CarlaUE4.sh", "-opengl", "-carla-server"]

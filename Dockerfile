@@ -9,7 +9,7 @@ ARG ROS_BASE=carla
 ARG TEMP_IMAGE=sumo
 
 # in case of carla, use these
-ARG CARLA_VERSION=0.9.9
+ARG CARLA_VERSION=0.9.11
 ARG MAP_FILE=https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_$CARLA_VERSION.tar.gz
 
 FROM ${BASE_IMG} AS company_version
@@ -53,7 +53,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
     libegl1 \
     libxext6 \
     libx11-6 \
-    gcc git openssh-client libfontconfig1 \
+    gcc x11-apps git openssh-client libfontconfig1 \
     emacs python tcpdump telnet byacc flex \
     iproute2 gdbserver less bison valgrind \
     libxtst-dev libxext-dev libxrender-dev libfreetype6-dev \
@@ -108,8 +108,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	sumo-doc
 
 ENV SUMO_HOME /usr/share/sumo
-RUN echo "PATH=$PATH:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
-RUN echo "PYTHONPATH=$PYTHONPATH:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
+RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
+RUN echo "PYTHONPATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/sumo/tools:/usr/share/sumo" >> /etc/environment
 RUN pip install gym easygui matplotlib opencv-python control
 
 FROM mwendler/wget as temp_carla
@@ -129,6 +129,7 @@ RUN apt-get update && apt-get install -y xdg-user-dirs xdg-utils && apt-get clea
 USER carla
 WORKDIR /home/carla
 COPY --from=temp_carla /AdditionalMaps_$CARLA_VERSION.tar.gz Import/
+COPY carla-package-NGSIM-openDD.tar.gz Import/
 RUN echo "copy done"
 RUN ./ImportAssets.sh
 
@@ -136,7 +137,7 @@ FROM ${CARLA_BASE}_img as carla_img
 ARG CARLA_VERSION
 
 COPY --from=carla_server /home/carla/PythonAPI/carla/dist/carla-$CARLA_VERSION-py3.7-linux-x86_64.egg /carla_packages/
-RUN echo "PYTHONPATH=$PYTHONPATH:/carla_packages/carla-$CARLA_VERSION-py3.7-linux-x86_64.egg" >> /etc/environment
+RUN echo "PYTHONPATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/sumo/tools:/usr/share/sumo:/carla_packages/carla-$CARLA_VERSION-py3.7-linux-x86_64.egg" >> /etc/environment
 
 RUN pip install pygame
 
@@ -174,4 +175,5 @@ FROM ${TEMP_IMAGE}_img as final_image
 RUN pip install gym[atari]
 RUN pip install pytorch-lightning-bolts
 RUN pip install pytorch-lightning-bolts["extra"]
-
+RUN pip install gym==0.12.5 pygame==1.9.6 scikit-image==0.16.2
+RUN pip install lxml
