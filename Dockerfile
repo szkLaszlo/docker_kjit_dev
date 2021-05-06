@@ -125,12 +125,12 @@ ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
 #ENV http_proxy=http://172.17.0.1:3128
 #ENV https_proxy=http://172.17.0.1:3128
 USER root
-RUN apt-get update && apt-get install -y xdg-user-dirs xdg-utils && apt-get clean
+RUN apt-get update && apt-get install -y xdg-user-dirs xdg-utils python3-pip && apt-get clean
+RUN pip3 install gdown
 USER carla
 WORKDIR /home/carla
 COPY --from=temp_carla /AdditionalMaps_$CARLA_VERSION.tar.gz Import/
-COPY carla-package-NGSIM-openDD.tar.gz Import/
-RUN echo "copy done"
+RUN gdown --id 1FCHL7YJk12AwfxuMPmwXPJj71n3mwSxE -O Import/carla-package-NGSIM-openDD.tar.gz
 RUN ./ImportAssets.sh
 
 FROM ${CARLA_BASE}_img as carla_img

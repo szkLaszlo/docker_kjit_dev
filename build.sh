@@ -9,4 +9,4 @@ docker build --build-arg LOC=bme --build-arg CARLA_BASE=python --build-arg ROS_B
 docker build --build-arg LOC=bme --build-arg CARLA_BASE=sumo --build-arg ROS_BASE=carla --build-arg TEMP_IMAGE=ros -t sumo-carla-ros-dev --target final_image .
 
 #Use this line for carla server build
-docker build --build-arg LOC=bme --build-arg CARLA_VERSION=0.9.9 -t carla_server --target carla_server .
+docker build --build-arg LOC=bme -t carla_server --target carla_server .

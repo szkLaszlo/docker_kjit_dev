@@ -9,11 +9,11 @@ services:
 #                                                                                                                                                                                            
 
   carla_client:
-    image: szokelaszlo95/carla-dev
+    image: carla-dev
     environment:
     - SDL_VIDEODRIVER=x11
     - DISPLAY=$DISPLAY
-    - XAUTHORITY=$XAUTH
+    - XAUTHORITY=$XAUTHORITY
     - XAUTH=$XAUTH
     - HOST_USER=$USER
     - HOST_UID=$UID
@@ -23,8 +23,6 @@ services:
     volumes:
     - /home/$USER/:/home/$USER
     - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    - /etc/krb5.conf:/etc/krb5.conf:ro                      # Mount Kerberos ticket for authentication
-    - /etc/krb5.conf.d/:/etc/krb5.conf.d/:ro                # Mount Kerberos ticket for authentication?
     - /mnt:/mnt
     - /cache/hdd:/cache
     - /tmp:/tmp
@@ -43,7 +41,7 @@ services:
     entrypoint: ["/entry.sh", "true"]
 
   carla_server:
-    image: szokelaszlo95/carla_server
+    image: szokelaszlo95/carla-dev:server
     environment:
       - SDL_VIDEODRIVER=offscreen
     volumes:
