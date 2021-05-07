@@ -2,6 +2,7 @@
 XAUTH=/tmp/.carla_docker.xauth
 
 DISPLAY=$DISPLAY
+echo $DISPLAY
 sudo rm -rf $XAUTH
 touch $XAUTH
 

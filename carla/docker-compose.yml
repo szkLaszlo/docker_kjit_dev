@@ -13,7 +13,7 @@ services:
     environment:
     - SDL_VIDEODRIVER=x11
     - DISPLAY=$DISPLAY
-    - XAUTHORITY=$XAUTHORITY
+    - XAUTHORITY=$XAUTH
     - XAUTH=$XAUTH
     - HOST_USER=$USER
     - HOST_UID=$UID
@@ -21,17 +21,19 @@ services:
     - _JAVA_OPTIONS=-Duser.home=/home/$USER/    # for Java based apps, i.e. PyCharm, CLion
     - NVIDIA_VISIBLE_DEVICES=all
     volumes:
-    - /home/$USER/:/home/$USER
+    - /home/$USER:/home/$USER
     - /tmp/.X11-unix:/tmp/.X11-unix:rw
     - /mnt:/mnt
     - /cache/hdd:/cache
     - /tmp:/tmp
+    - ../entry.sh:/entry.sh
     ports:
     - "1234:22"
     links:
       - "carla_server:server"
 
     container_name: carla
+    ipc: host
     hostname: carla-remote-dev
     working_dir: $HOME
     cap_add:
@@ -41,7 +43,7 @@ services:
     entrypoint: ["/entry.sh", "true"]
 
   carla_server:
-    image: szokelaszlo95/carla-dev:server
+    image: carla_server
     environment:
       - SDL_VIDEODRIVER=offscreen
     volumes:
