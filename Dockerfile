@@ -68,18 +68,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
 
-# install PyCharm
-WORKDIR /opt
-RUN curl -fsSL -o pycharm-professional.tar.gz "https://data.services.jetbrains.com/products/download?code=PCP&platform=linux" && \
-    tar xzf pycharm-professional.tar.gz && \
-    rm pycharm-professional.tar.gz && \
-    mv pycharm* pycharm
-
-RUN python /opt/pycharm/plugins/python/helpers/pydev/setup_cython.py build_ext --inplace
-
-# Add executables
-RUN echo "/opt/pycharm/bin/pycharm.sh &" > /usr/bin/pycharm && chmod +x /usr/bin/pycharm
-
 RUN echo "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /etc/environment
 RUN echo "PYTHONPATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /etc/environment
 
@@ -113,8 +101,8 @@ RUN echo "PYTHONPATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/us
 RUN pip install gym easygui matplotlib opencv-python control
 
 FROM mwendler/wget as temp_carla
-#ENV http_proxy=http://172.17.0.1:3128
-#ENV https_proxy=http://172.17.0.1:3128
+ENV http_proxy=http://172.17.0.1:3128
+ENV https_proxy=http://172.17.0.1:3128
 ARG MAP_FILE
 RUN wget -S --no-check-certificate $MAP_FILE
 
@@ -122,15 +110,16 @@ FROM carlasim/carla:$CARLA_VERSION  as carla_server
 ARG CARLA_VERSION
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
-#ENV http_proxy=http://172.17.0.1:3128
-#ENV https_proxy=http://172.17.0.1:3128
+ENV http_proxy=http://172.17.0.1:3128
+ENV https_proxy=http://172.17.0.1:3128
 USER root
 RUN apt-get update && apt-get install -y xdg-user-dirs xdg-utils python3-pip && apt-get clean
 RUN pip3 install gdown
 USER carla
 WORKDIR /home/carla
 COPY --from=temp_carla /AdditionalMaps_$CARLA_VERSION.tar.gz Import/
-RUN gdown --id 1FCHL7YJk12AwfxuMPmwXPJj71n3mwSxE -O Import/carla-package-NGSIM-openDD.tar.gz
+COPY carla-package-NGSIM-openDD.tar.gz Import/
+
 RUN ./ImportAssets.sh
 
 FROM ${CARLA_BASE}_img as carla_img
